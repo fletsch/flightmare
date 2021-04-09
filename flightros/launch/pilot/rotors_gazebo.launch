@@ -9,7 +9,7 @@
   <arg name="use_unity_editor" default="false" />
   <arg name="paused" value="true"/>
   <arg name="gui" value="true"/>
-  <arg name="use_mpc" default="false"/>
+  <arg name="use_mpc" default="true"/>
   <arg name="use_ground_truth" default="true"/>
   <arg name="enable_ground_truth" default="true"/>
   <arg name="enable_command_feedthrough" default="false"/>
@@ -69,20 +69,22 @@
     </node>
 
     <!-- Autopilot -->
-    <node pkg="autopilot" type="autopilot" name="autopilot" output="screen">
-      <rosparam file="$(find state_predictor)/parameters/hummingbird.yaml" />
-      <rosparam file="$(find rpg_rotors_interface)/parameters/position_controller.yaml" />
-      <rosparam file="$(find rpg_rotors_interface)/parameters/autopilot.yaml" />
+    <group unless="$(arg use_mpc)">
+      <node pkg="autopilot" type="autopilot" name="autopilot" output="screen">
+        <rosparam file="$(find state_predictor)/parameters/hummingbird.yaml" />
+        <rosparam file="$(find rpg_rotors_interface)/parameters/position_controller.yaml" />
+        <rosparam file="$(find rpg_rotors_interface)/parameters/autopilot.yaml" />
 
-      <param name="position_controller/use_rate_mode" value="True" />
+        <param name="position_controller/use_rate_mode" value="True" />
 
-      <param name="velocity_estimate_in_world_frame" value="false" />
-      <param name="state_estimate_timeout" value="0.1" />
-      <param name="control_command_delay" value="0.05" />
-      <param name="enable_command_feedthrough" value="$(arg enable_command_feedthrough)" />
+        <param name="velocity_estimate_in_world_frame" value="false" />
+        <param name="state_estimate_timeout" value="0.1" />
+        <param name="control_command_delay" value="0.05" />
+        <param name="enable_command_feedthrough" value="$(arg enable_command_feedthrough)" />
 
-      <remap from="autopilot/state_estimate" to="ground_truth/odometry" />
-    </node>
+        <remap from="autopilot/state_estimate" to="ground_truth/odometry" />
+      </node>
+    </group>
 
     <group if="$(arg use_mpc)">
       <node pkg="rpg_mpc" type="autopilot_mpc_instance" name="autopilot" output="screen">
@@ -116,6 +118,11 @@
     <node name="rqt_quad_gui" pkg="rqt_gui" type="rqt_gui"
         args="-s rqt_quad_gui.basic_flight.BasicFlight --args
         --quad_name $(arg quad_name)" output="screen"/>
+
+    
+    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find flightros)/launch/camera/camera.rviz" /> -->
+
+    <!-- <node pkg="vision_node" type="vision_node" name="vision" output="screen" /> -->
 
   </group>
 

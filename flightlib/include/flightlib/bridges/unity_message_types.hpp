@@ -23,9 +23,9 @@ namespace flightlib {
 enum UnityScene {
   INDUSTRIAL = 0,
   WAREHOUSE = 1,
-  GARAGE = 2,
-  TUNELS = 4,
-  NATUREFOREST = 3,
+  TOWERSLARGE = 2,
+  TOWERSSMALL = 3,
+  BASICLINE = 4,
   // total number of environment
   SceneNum = 5
 };

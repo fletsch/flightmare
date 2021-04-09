@@ -6,6 +6,8 @@
 // ros
 #include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
+#include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 
 // rpg quadrotor
 #include <autopilot/autopilot_helper.h>
@@ -15,6 +17,7 @@
 
 // flightlib
 #include "flightlib/bridges/unity_bridge.hpp"
+#include "flightlib/bridges/unity_message_types.hpp"
 #include "flightlib/common/quad_state.hpp"
 #include "flightlib/common/types.hpp"
 #include "flightlib/objects/quadrotor.hpp"
@@ -44,6 +47,10 @@ class FlightPilot {
   ros::NodeHandle pnh_;
 
   // publisher
+  image_transport::Publisher rgb_pub_;
+  image_transport::Publisher depth_pub_;
+  image_transport::Publisher segmentation_pub_;
+  image_transport::Publisher opticalflow_pub_;
 
   // subscriber
   ros::Subscriber sub_state_est_;

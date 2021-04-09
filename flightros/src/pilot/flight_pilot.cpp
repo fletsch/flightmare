@@ -5,7 +5,7 @@ namespace flightros {
 FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   : nh_(nh),
     pnh_(pnh),
-    scene_id_(UnityScene::INDUSTRIAL),
+    scene_id_(UnityScene::BASICLINE),
     unity_ready_(false),
     unity_render_(false),
     receive_id_(0),
@@ -23,13 +23,18 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
 
   // add mono camera
   rgb_camera_ = std::make_shared<RGBCamera>();
-  Vector<3> B_r_BC(0.0, 0.0, 0.3);
-  Matrix<3, 3> R_BC = Quaternion(1.0, 0.0, 0.0, 0.0).toRotationMatrix();
+  Vector<3> B_r_BC(0.4, 0.0, -0.3);
+  // Matrix<3, 3> R_BC = Quaternion(1.0, 0.0, 0.0, 0.0).toRotationMatrix();
+  Matrix<3, 3> R_BC = (Matrix<3, 3>() << 0.0, 0.707, 0.707,
+                                        -1.0, 0.0, 0.0,
+                                         0.0, -0.707, 0.707).finished();
   std::cout << R_BC << std::endl;
   rgb_camera_->setFOV(90);
   rgb_camera_->setWidth(720);
   rgb_camera_->setHeight(480);
   rgb_camera_->setRelPose(B_r_BC, R_BC);
+  rgb_camera_->setPostProcesscing(
+    std::vector<bool>{true, true, true});  // depth, segmentation, optical flow
   quad_ptr_->addRGBCamera(rgb_camera_);
 
   // initialization
@@ -44,6 +49,13 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   timer_main_loop_ = nh_.createTimer(ros::Rate(main_loop_freq_),
                                      &FlightPilot::mainLoopCallback, this);
 
+
+  // initialize publishers (using public nodehandle to be in correct ns)
+  image_transport::ImageTransport it(nh_);
+  rgb_pub_ = it.advertise("rgb", 1);
+  depth_pub_ = it.advertise("depth", 1);
+  segmentation_pub_ = it.advertise("segmentation", 1);
+  opticalflow_pub_ = it.advertise("opticalflow", 1);
 
   // wait until the gazebo and unity are loaded
   ros::Duration(5.0).sleep();
@@ -78,7 +90,40 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
 }
 
 void FlightPilot::mainLoopCallback(const ros::TimerEvent &event) {
-  // empty
+  
+  // publish camera data 
+  unity_bridge_ptr_->getRender(0);
+  unity_bridge_ptr_->handleOutput();
+
+  cv::Mat img;
+
+  ros::Time timestamp = ros::Time::now();
+
+  rgb_camera_->getRGBImage(img);
+  sensor_msgs::ImagePtr rgb_msg =
+    cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+  rgb_msg->header.stamp = timestamp;
+  rgb_pub_.publish(rgb_msg);
+
+  rgb_camera_->getDepthMap(img);
+  sensor_msgs::ImagePtr depth_msg =
+    cv_bridge::CvImage(std_msgs::Header(), "32FC1", img).toImageMsg();
+  depth_msg->header.stamp = timestamp;
+  depth_pub_.publish(depth_msg);
+
+  rgb_camera_->getSegmentation(img);
+  sensor_msgs::ImagePtr segmentation_msg =
+    cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+  segmentation_msg->header.stamp = timestamp;
+  segmentation_pub_.publish(segmentation_msg);
+
+  // // The current optical flow is not correct.
+  // // you can still visualize it by uncomment the following code.
+  // rgb_camera_->getOpticalFlow(img);
+  // sensor_msgs::ImagePtr opticflow_msg =
+  //   cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+  // opticflow_msg->header.stamp = timestamp;
+  // opticalflow_pub_.publish(opticflow_msg);
 }
 
 bool FlightPilot::setUnity(const bool render) {
