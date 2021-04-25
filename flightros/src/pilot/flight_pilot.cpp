@@ -30,11 +30,11 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
                                          0.0, -0.707, 0.707).finished();
   std::cout << R_BC << std::endl;
   rgb_camera_->setFOV(90);
-  rgb_camera_->setWidth(720);
+  rgb_camera_->setWidth(720); // TODO: reduce if topics wanted at higher rate
   rgb_camera_->setHeight(480);
   rgb_camera_->setRelPose(B_r_BC, R_BC);
   rgb_camera_->setPostProcesscing(
-    std::vector<bool>{true, true, true});  // depth, segmentation, optical flow
+    std::vector<bool>{true, true, false});  // depth, segmentation, optical flow
   quad_ptr_->addRGBCamera(rgb_camera_);
 
   // initialization
@@ -87,17 +87,11 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
       ROS_INFO("COLLISION");
     }
   }
-}
-
-void FlightPilot::mainLoopCallback(const ros::TimerEvent &event) {
-  
-  // publish camera data 
-  unity_bridge_ptr_->getRender(0);
-  unity_bridge_ptr_->handleOutput();
 
   cv::Mat img;
-
-  ros::Time timestamp = ros::Time::now();
+  // ros::Time timestamp = ros::Time::now();
+  ros::Time timestamp = timestamp_last_;
+  timestamp_last_ = msg->header.stamp;
 
   rgb_camera_->getRGBImage(img);
   sensor_msgs::ImagePtr rgb_msg =
@@ -124,6 +118,11 @@ void FlightPilot::mainLoopCallback(const ros::TimerEvent &event) {
   //   cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
   // opticflow_msg->header.stamp = timestamp;
   // opticalflow_pub_.publish(opticflow_msg);
+}
+
+void FlightPilot::mainLoopCallback(const ros::TimerEvent &event) {
+  
+
 }
 
 bool FlightPilot::setUnity(const bool render) {

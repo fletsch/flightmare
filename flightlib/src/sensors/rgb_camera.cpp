@@ -147,6 +147,7 @@ void RGBCamera::enableOpticalFlow(const bool on) {
 
 bool RGBCamera::getRGBImage(cv::Mat& rgb_img) {
   if (!rgb_queue_.empty()) {
+    // logger_.warn("RGB queue size %d", rgb_queue_.size());
     rgb_img = rgb_queue_.front();
     rgb_queue_.pop_front();
     return true;

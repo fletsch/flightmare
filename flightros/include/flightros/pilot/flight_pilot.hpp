@@ -73,5 +73,6 @@ class FlightPilot {
 
   // auxiliary variables
   Scalar main_loop_freq_{50.0};
+  ros::Time timestamp_last_;
 };
 }  // namespace flightros
