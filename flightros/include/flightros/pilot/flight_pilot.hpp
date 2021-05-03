@@ -70,9 +70,10 @@ class FlightPilot {
   bool unity_render_{false};
   RenderMessage_t unity_output_;
   uint16_t receive_id_{0};
+  uint16_t send_frame_id_{0};
 
   // auxiliary variables
   Scalar main_loop_freq_{50.0};
-  ros::Time timestamp_last_;
+  ros::Time timestamp_prev_;
 };
 }  // namespace flightros

@@ -5,10 +5,11 @@ namespace flightros {
 FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   : nh_(nh),
     pnh_(pnh),
-    scene_id_(UnityScene::BASICLINE),
+    scene_id_(UnityScene::TOWERSSMALL),
     unity_ready_(false),
     unity_render_(false),
     receive_id_(0),
+    send_frame_id_(0),
     main_loop_freq_(50.0) {
   // load parameters
   if (!loadParams()) {
@@ -78,9 +79,10 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   //
   quad_ptr_->setState(quad_state_);
 
+  uint16_t receive_frame_id;
   if (unity_render_ && unity_ready_) {
-    unity_bridge_ptr_->getRender(0);
-    unity_bridge_ptr_->handleOutput();
+    unity_bridge_ptr_->getRender(send_frame_id_);
+    receive_frame_id = unity_bridge_ptr_->handleOutput();
 
     if (quad_ptr_->getCollision()) {
       // collision happened
@@ -88,11 +90,21 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
     }
   }
 
-  cv::Mat img;
-  // ros::Time timestamp = ros::Time::now();
-  ros::Time timestamp = timestamp_last_;
-  timestamp_last_ = msg->header.stamp;
+  ros::Time timestamp;
+  std::cout << "send "<< send_frame_id_ << " received " << receive_frame_id << std::endl;
+  if (send_frame_id_ == receive_frame_id) 
+  {
+    // it means the received image is corresponding to the current send pose, otherwise it was the image from last update
+    timestamp = msg->header.stamp;
+  }
+  else
+  {
+    timestamp = timestamp_prev_;
+  }
+  send_frame_id_ += 1; // TODO: inside if or here??
+  timestamp_prev_ = msg->header.stamp;
 
+  cv::Mat img;
   rgb_camera_->getRGBImage(img);
   sensor_msgs::ImagePtr rgb_msg =
     cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();

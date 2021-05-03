@@ -198,7 +198,7 @@ bool UnityBridge::addStaticObject(std::shared_ptr<StaticObject> static_object) {
   return true;
 }
 
-bool UnityBridge::handleOutput() {
+flightlib::FrameID UnityBridge::handleOutput() {
   // create new message object
   zmqpp::message msg;
   sub_.receive(msg);
@@ -271,7 +271,7 @@ bool UnityBridge::handleOutput() {
       }
     }
   }
-  return true;
+  return sub_msg.frame_id;
 }
 
 bool UnityBridge::getPointCloud(PointCloudMessage_t& pointcloud_msg,
