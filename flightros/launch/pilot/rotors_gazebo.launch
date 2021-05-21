@@ -18,8 +18,8 @@
   <arg name="enable_logging" default="false"/>
   <arg name="log_file" default="$(arg mav_name)"/>
 
-  <arg name="x_init" default="0"/>
-  <arg name="y_init" default="0"/>
+  <arg name="x_init" default="50"/>
+  <arg name="y_init" default="4.5"/>
 
   <arg name="debug" default="false"/>
   <arg name="verbose" default="false"/>

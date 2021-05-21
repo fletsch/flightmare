@@ -5,7 +5,7 @@ namespace flightros {
 FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   : nh_(nh),
     pnh_(pnh),
-    scene_id_(UnityScene::TOWERSSMALL),
+    scene_id_(UnityScene::FOREST),
     unity_ready_(false),
     unity_render_(false),
     receive_id_(0),
@@ -38,6 +38,21 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
     std::vector<bool>{true, true, false});  // depth, segmentation, optical flow
   quad_ptr_->addRGBCamera(rgb_camera_);
 
+  // add third person view rgb camera
+  third_person_camera_ = std::make_shared<RGBCamera>();
+  Vector<3> B_r_BC2(-5, 0.0, 2);
+  Matrix<3, 3> R_BC2 = (Matrix<3, 3>() << 0.0, 1.0, 0.0,
+                                        -1.0, 0.0, 0.0,
+                                         0.0, 0.0, 1.0).finished();
+  std::cout << R_BC << std::endl;
+  third_person_camera_->setFOV(90);
+  third_person_camera_->setWidth(720);
+  third_person_camera_->setHeight(480);
+  third_person_camera_->setRelPose(B_r_BC2, R_BC2);
+  third_person_camera_->setPostProcesscing(
+    std::vector<bool>{false, false, false});  // depth, segmentation, optical flow
+  quad_ptr_->addRGBCamera(third_person_camera_);
+
   // initialization
   quad_state_.setZero();
   quad_ptr_->reset(quad_state_);
@@ -57,6 +72,7 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   depth_pub_ = it.advertise("depth", 1);
   segmentation_pub_ = it.advertise("segmentation", 1);
   opticalflow_pub_ = it.advertise("opticalflow", 1);
+  third_person_pub_ = it.advertise("rgb_third_person", 1);
 
   // wait until the gazebo and unity are loaded
   ros::Duration(5.0).sleep();
@@ -91,7 +107,7 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   }
 
   ros::Time timestamp;
-  std::cout << "send "<< send_frame_id_ << " received " << receive_frame_id << std::endl;
+  // std::cout << "send "<< send_frame_id_ << " received " << receive_frame_id << std::endl;
   if (send_frame_id_ == receive_frame_id) 
   {
     // it means the received image is corresponding to the current send pose, otherwise it was the image from last update
@@ -122,6 +138,12 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
     cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
   segmentation_msg->header.stamp = timestamp;
   segmentation_pub_.publish(segmentation_msg);
+
+  third_person_camera_->getRGBImage(img);
+  sensor_msgs::ImagePtr third_person_msg =
+    cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+  third_person_msg->header.stamp = timestamp;
+  third_person_pub_.publish(third_person_msg);
 
   // // The current optical flow is not correct.
   // // you can still visualize it by uncomment the following code.

@@ -51,6 +51,7 @@ class FlightPilot {
   image_transport::Publisher depth_pub_;
   image_transport::Publisher segmentation_pub_;
   image_transport::Publisher opticalflow_pub_;
+  image_transport::Publisher third_person_pub_;
 
   // subscriber
   ros::Subscriber sub_state_est_;
@@ -61,6 +62,7 @@ class FlightPilot {
   // unity quadrotor
   std::shared_ptr<Quadrotor> quad_ptr_;
   std::shared_ptr<RGBCamera> rgb_camera_;
+  std::shared_ptr<RGBCamera> third_person_camera_;
   QuadState quad_state_;
 
   // Flightmare(Unity3D)
