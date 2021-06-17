@@ -28,8 +28,9 @@ enum UnityScene {
   BASICLINE = 4,
   FOREST = 5,
   POWERLINE = 6,
+  POWERLINESHAPES = 7,
   // total number of environment
-  SceneNum = 7
+  SceneNum = 8
 };
 
 // Unity Camera, should not be used alone.
