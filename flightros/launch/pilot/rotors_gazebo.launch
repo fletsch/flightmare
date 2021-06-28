@@ -64,7 +64,7 @@
       <remap from="rpg_rotors_interface/arm" to="bridge/arm" />
     </node>
 
-    <!-- RPG Flightmare Unity Render. --> -->
+    <!-- RPG Flightmare Unity Render. -->
     <node pkg="flightrender" type="RPG_Flightmare.x86_64" args="-batchmode" name="rpg_flightmare_render" unless="$(arg use_unity_editor)" >
     </node>
 
@@ -119,10 +119,6 @@
         args="-s rqt_quad_gui.basic_flight.BasicFlight --args
         --quad_name $(arg quad_name)" output="screen"/>
 
-    
-    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find flightros)/launch/camera/camera.rviz" /> -->
-
-    <!-- <node pkg="vision_node" type="line_detector" name="vision" output="screen" /> -->
 
   </group>
 

@@ -31,7 +31,7 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
                                          0.0, -0.707, 0.707).finished();
   std::cout << R_BC << std::endl;
   rgb_camera_->setFOV(90);
-  rgb_camera_->setWidth(720); // TODO: reduce if topics wanted at higher rate
+  rgb_camera_->setWidth(720);
   rgb_camera_->setHeight(480);
   rgb_camera_->setRelPose(B_r_BC, R_BC);
   rgb_camera_->setPostProcesscing(
@@ -107,10 +107,10 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   }
 
   ros::Time timestamp;
-  // std::cout << "send "<< send_frame_id_ << " received " << receive_frame_id << std::endl;
   if (send_frame_id_ == receive_frame_id) 
   {
-    // it means the received image is corresponding to the current send pose, otherwise it was the image from last update
+    // it means the received image is corresponding to the current send pose, 
+    // otherwise it was the image from last update
     timestamp = msg->header.stamp;
   }
   else
@@ -145,13 +145,6 @@ void FlightPilot::poseCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   third_person_msg->header.stamp = timestamp;
   third_person_pub_.publish(third_person_msg);
 
-  // // The current optical flow is not correct.
-  // // you can still visualize it by uncomment the following code.
-  // rgb_camera_->getOpticalFlow(img);
-  // sensor_msgs::ImagePtr opticflow_msg =
-  //   cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
-  // opticflow_msg->header.stamp = timestamp;
-  // opticalflow_pub_.publish(opticflow_msg);
 }
 
 void FlightPilot::mainLoopCallback(const ros::TimerEvent &event) {
